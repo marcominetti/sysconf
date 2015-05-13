@@ -1,6 +1,6 @@
 {
   "name": "sysconfx-next",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Native bindings for linux sysconf(3) call, based on the original sysconf module by Jen Andre/Alexander Vassilev",
   "main": "lib/index.js",
   "scripts": {
@@ -20,6 +20,9 @@
   "readmeFilename": "README.md",
   "directories": {
     "test": "tests"
+  },
+  "dependencies": {
+    "nan": "^1.8.0"
   },
   "os": [
     "darwin",

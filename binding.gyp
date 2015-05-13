@@ -1,8 +1,11 @@
 {
   "targets": [
   {
-    "target_name": "sysconf",
-      "sources": [ "src/sysconf.cc" ]
+    "target_name": "sysconfx",
+    "sources": [ "src/sysconf.cc" ],
+    'include_dirs': [
+        "<!(node -e \"require('nan')\")"
+    ]
   }
   ]
 }

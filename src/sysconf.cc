@@ -1,113 +1,131 @@
-/* This code is PUBLIC DOMAIN, and is distributed on an "AS IS" BASIS,
+/* Based on the sysconf node module by Jen Andre, ported to node >= 0.11
+ * and some additons by Alexander Vassilev
+ *
+ * This code is PUBLIC DOMAIN, and is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. See the accompanying 
  * LICENSE file.
  */
 
 #include <v8.h>
 #include <node.h>
+#include <nan.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
+#include <map>
 
-using namespace node;
+#define MY_THROW_EXCEP(msg) do {   \
+    NanThrowError(msg);         \
+    NanReturnUndefined();       \
+} while(0)
+
 using namespace v8;
+typedef std::map<std::string, int> NameIdMap;
 
-Handle<Value> Sysconf(const Arguments& args);
-Handle<Value> Keys(const Arguments& args);
-
-void Init(Handle<Object> target)
+NAN_METHOD(call)
 {
-  HandleScope scope;
-  target->Set(String::NewSymbol("sysconf"), FunctionTemplate::New(Sysconf)->GetFunction());
-  target->Set(String::NewSymbol("keys"), FunctionTemplate::New(Keys)->GetFunction());
-};
+  NanEscapableScope();
+  if (args.Length() != 1)
+      MY_THROW_EXCEP("Function expects one integer or string argument");
 
-Handle<Value> Sysconf(const Arguments& args)
-{
-  HandleScope scope;
-  int value = -1;
-  if (args.Length() > 0 && args[0]->IsInt32()) {
-    value = args[0]->Int32Value();
-  } else {
-    return ThrowException(Exception::Error(String::New("you must supply a valid sysconf() parameter")));
-  }
+  int id = -1;
+  v8::Value* arg0 = *args[0];
 
-  long result = sysconf(value);
+  if (!arg0->IsInt32())
+      MY_THROW_EXCEP("Parameter must be integer");
 
-  if (result > 0) {
-    return scope.Close(Number::New(result));
-  } else {
-    return ThrowException(Exception::Error(String::New("Invalid parameters")));
-  } 
+  id = arg0->Int32Value();
+  if (id < 0)
+      MY_THROW_EXCEP("Parameter must be a non-negative integer");
+  long result = sysconf(id);
+  if (result > 0)
+      NanReturnValue(NanNew<Number>(result));
+   else
+      MY_THROW_EXCEP("sysconf parameter id not recognized by operating system");
 }
 
-Handle<Value> Keys(const Arguments& args)
+#define ADD_KEY(name)            \
+    obj->Set(NanNew<String>(#name), NanNew<Number>((int)name))
+
+NAN_METHOD(keys)
 {
-  HandleScope scope;
-  Local<Object> obj = Object::New();
+  NanEscapableScope();
+  Local<Object> obj = NanNew<Object>();
+
 #ifdef _SC_ARG_MAX
-  obj->Set(String::New("_SC_ARG_MAX"), Number::New(_SC_ARG_MAX));
+  ADD_KEY(_SC_ARG_MAX);
 #endif
+
 #ifdef _SC_CHILD_MAX
-  obj->Set(String::New("_SC_CHILD_MAX"), Number::New(_SC_CHILD_MAX));
+  ADD_KEY(_SC_CHILD_MAX);
 #endif
 
 #ifdef _SC_HOST_NAME_MAX
-  obj->Set(String::New("_SC_HOST_NAME_MAX"), Number::New(_SC_HOST_NAME_MAX));
+  ADD_KEY(_SC_HOST_NAME_MAX);
 #endif
 
 #ifdef _SC_LOGIN_NAME_MAX
-  obj->Set(String::New("_SC_LOGIN_NAME_MAX"), Number::New(_SC_LOGIN_NAME_MAX));
+  ADD_KEY(_SC_LOGIN_NAME_MAX);
 #endif
 
 #ifdef _SC_OPEN_MAX
-  obj->Set(String::New("_SC_OPEN_MAX"), Number::New(_SC_OPEN_MAX));
+  ADD_KEY(_SC_OPEN_MAX);
 #endif
 
 #ifdef _SC_PAGESIZE
-  obj->Set(String::New("_SC_PAGESIZE"), Number::New(_SC_PAGESIZE));
+  ADD_KEY(_SC_PAGESIZE);
 #endif
 
 #ifdef _SC_RE_DUP_MAX
-  obj->Set(String::New("_SC_RE_DUP_MAX"), Number::New(_SC_RE_DUP_MAX));
+  ADD_KEY(_SC_RE_DUP_MAX);
 #endif
 
 #ifdef _SC_STREAM_MAX
-  obj->Set(String::New("_SC_STREAM_MAX"), Number::New(_SC_STREAM_MAX));
+  ADD_KEY(_SC_STREAM_MAX);
 #endif
 
 #ifdef _SC_SYMLOOP_MAX
-  obj->Set(String::New("_SC_SYMLOOP_MAX"), Number::New(_SC_SYMLOOP_MAX));
+  ADD_KEY(_SC_SYMLOOP_MAX);
 #endif
 
 #ifdef _SC_TTY_NAME_MAX
-  obj->Set(String::New("_SC_TTY_NAME_MAX"), Number::New(_SC_TTY_NAME_MAX));
+  ADD_KEY(_SC_TTY_NAME_MAX);
 #endif
 
 #ifdef _SC_TZNAME_MAX
-  obj->Set(String::New("_SC_TZNAME_MAX"), Number::New(_SC_TZNAME_MAX));
+  ADD_KEY(_SC_TZNAME_MAX);
 #endif
 
 #ifdef _SC_VERSION
-  obj->Set(String::New("_SC_VERSION"), Number::New(_SC_VERSION));
+  ADD_KEY(_SC_VERSION);
 #endif
 
 #ifdef _SC_CLK_TCK
-  obj->Set(String::New("_SC_CLK_TCK"), Number::New(_SC_CLK_TCK));
+  ADD_KEY(_SC_CLK_TCK);
 #endif
 
-  return scope.Close(obj);
+#ifdef _SC_NPROCESSORS_ONLN
+  ADD_KEY(_SC_NPROCESSORS_ONLN);
+#endif
+
+#ifdef _SC_PAGE_SIZE
+  ADD_KEY(_SC_PAGE_SIZE);
+#endif
+
+#ifdef _SC_PHYS_PAGES
+  ADD_KEY(_SC_PHYS_PAGES);
+#endif
+
+#ifdef _SC_AVPHYS_PAGES
+  ADD_KEY(_SC_AVPHYS_PAGES);
+#endif
+  NanReturnValue(obj);
 }
 
 
-
-extern "C" {
-  static void init (Handle<Object> target)
-  {
-    Init(target);
-  }
-
-  NODE_MODULE(sysconf, init);
+void init(Handle<Object> target)
+{
+  target->Set(NanNew<String>("sysconf"), NanNew<FunctionTemplate>(call)->GetFunction());
+  target->Set(NanNew<String>("keys"), NanNew<FunctionTemplate>(keys)->GetFunction());
 }
+
+NODE_MODULE(sysconfx, init);

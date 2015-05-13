@@ -1,7 +1,7 @@
 {
-  "name": "sysconf",
-  "version": "0.1.0",
-  "description": "native bindings for linux sysconf(3) call",
+  "name": "sysconfx-next",
+  "version": "1.0.6",
+  "description": "Native bindings for linux sysconf(3) call, based on the original sysconf module by Jen Andre/Alexander Vassilev",
   "main": "lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jandre/sysconf.git"
+    "url": "https://github.com/marcominetti/sysconf.git"
   },
   "keywords": [
     "sysconf"
@@ -18,8 +18,12 @@
   "license": "MIT",
   "gypfile": true,
   "readmeFilename": "README.md",
-  "gitHead": "06c50937c00df6e54854339bdb3f295ca82f5349",
   "directories": {
     "test": "tests"
-  }
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "!win32"
+  ]
 }

@@ -1,4 +1,4 @@
-# sysconfx
+# sysconfx-next
 
 Node bindings for sysconf(3), based on the sysconf module by Jen Andre
 Some enhancements and port to node >= 0.11 by Alexander Vassilev
@@ -14,7 +14,7 @@ long sysconf(int name);
 ## Installation
 
 ```
-$ npm install sysconf 
+$ npm install sysconfx-next 
  ```
 
 ## Usage
@@ -23,7 +23,7 @@ $ npm install sysconf
 
 ```js
 
-var sysconf = require('sysconf');
+var sysconf = require('sysconfx-next');
 
 // get clock ticks
 console.log(sysconf(sysconf._SC_CLK_TCK)); // 100

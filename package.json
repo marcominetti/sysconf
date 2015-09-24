@@ -1,6 +1,6 @@
 {
   "name": "sysconfx-next",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Native bindings for linux sysconf(3) call, based on the original sysconf module by Jen Andre/Alexander Vassilev",
   "main": "lib/index.js",
   "scripts": {

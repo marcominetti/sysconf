@@ -13,43 +13,46 @@
 #include <unistd.h>
 #include <map>
 
-#define MY_THROW_EXCEP(msg) do {   \
-    NanThrowError(msg);         \
-    NanReturnUndefined();       \
-} while(0)
-
 using namespace v8;
 typedef std::map<std::string, int> NameIdMap;
 
 NAN_METHOD(call)
 {
-  NanEscapableScope();
-  if (args.Length() != 1)
-      MY_THROW_EXCEP("Function expects one integer or string argument");
+  Nan::EscapableHandleScope scope;
+  if (info.Length() != 1) {
+    Nan::ThrowError("Function expects one integer or string argument");
+    return;
+  }
 
   int id = -1;
-  v8::Value* arg0 = *args[0];
+  v8::Value* arg0 = *info[0];
 
-  if (!arg0->IsInt32())
-      MY_THROW_EXCEP("Parameter must be integer");
+  if (!arg0->IsInt32()) {
+      Nan::ThrowError("Parameter must be integer");
+      return;
+  }
 
   id = arg0->Int32Value();
-  if (id < 0)
-      MY_THROW_EXCEP("Parameter must be a non-negative integer");
+  if (id < 0) {
+      Nan::ThrowError("Parameter must be a non-negative integer");
+      return;
+  }
   long result = sysconf(id);
-  if (result > 0)
-      NanReturnValue(NanNew<Number>(result));
-   else
-      MY_THROW_EXCEP("sysconf parameter id not recognized by operating system");
+  if (result > 0) {
+      info.GetReturnValue().Set(Nan::New<Number>(result));
+  } else {
+      Nan::ThrowError("sysconf parameter id not recognized by operating system");
+      return;
+  }
 }
 
 #define ADD_KEY(name)            \
-    obj->Set(NanNew<String>(#name), NanNew<Number>((int)name))
+    Nan::Set(obj, Nan::New<String>(#name).ToLocalChecked(), Nan::New<Number>((int)name))
 
 NAN_METHOD(keys)
 {
-  NanEscapableScope();
-  Local<Object> obj = NanNew<Object>();
+  Nan::EscapableHandleScope scope;
+  Local<Object> obj = Nan::New<Object>();
 
 #ifdef _SC_ARG_MAX
   ADD_KEY(_SC_ARG_MAX);
@@ -118,14 +121,14 @@ NAN_METHOD(keys)
 #ifdef _SC_AVPHYS_PAGES
   ADD_KEY(_SC_AVPHYS_PAGES);
 #endif
-  NanReturnValue(obj);
+  info.GetReturnValue().Set(obj);
 }
 
 
-void init(Handle<Object> target)
+void init(Local<Object> target)
 {
-  target->Set(NanNew<String>("sysconf"), NanNew<FunctionTemplate>(call)->GetFunction());
-  target->Set(NanNew<String>("keys"), NanNew<FunctionTemplate>(keys)->GetFunction());
+  Nan::Set(target, Nan::New<String>("sysconf").ToLocalChecked(), Nan::New<FunctionTemplate>(call)->GetFunction());
+  Nan::Set(target, Nan::New<String>("keys").ToLocalChecked(), Nan::New<FunctionTemplate>(keys)->GetFunction());
 }
 
 NODE_MODULE(sysconfx, init);
